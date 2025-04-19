@@ -362,8 +362,13 @@
                 return;
             }
 
-            if (!category && !description) {
+            if (!category) {
                 alert('Please enter a category and its description');
+                return;
+            }
+
+            if (!description) {
+                alert('Please enter a its description');
                 return;
             }
 
