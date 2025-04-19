@@ -295,8 +295,8 @@
                 btn.addEventListener('click', function () {
                     const id = parseInt(this.getAttribute('data-id'));
                     data = data.filter(record => record.id !== id);
-                    updateTable();
-                    updateTotals();
+                    updateTable(data);
+                    updateTotals(data);
                 });
             });
         }
@@ -312,6 +312,7 @@
         }
 
         function total_income(data) {
+            console.log(data);
             return data.reduce((sum, record) =>
                 record.type === 'income' ? sum + Number(record.amount) : sum, 0);
         }
@@ -352,7 +353,7 @@
             const description = formData.get('description').trim();
             const amount = parseFloat(formData.get('amount'));
 
-            if (date === null) {
+            if (!date) {
                 alert('Please enter a date');
                 return;
             }
@@ -386,8 +387,8 @@
                 amount
             };
             data.push(newRecord);
-            updateTable();
-            updateTotals();
+            updateTable(data);
+            updateTotals(data);
             this.reset();
         });
 
