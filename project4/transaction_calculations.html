@@ -116,7 +116,6 @@
         const main = document.getElementById('all-rows');
         const sortDate = document.getElementById('sortid');
         const groupExpense = document.getElementById('groupid');
-        let sumExpenses, sumSavings, sumIncome;
 
         const group_expense = { expense: true };
         const group_income = { expense: false };
@@ -266,8 +265,8 @@
         }
         //Group Expenses by Category
         function groupExpensesByCategory() {
-            const g_expense = {};
-            const g_income = {};
+            let g_expense = {};
+            let g_income = {};
 
             data.forEach(record => {
                 if (record.type === 'expense') {
@@ -307,13 +306,9 @@
         // }
 
         function updateTotals(data) {
-            let income = total_income(data);
-            let expense = total_expense(data);
-            let savings = total_savings(data);
-
-            income = data.type === 'income' ? income += data.amount : income;
-            expense = data.type === 'expense' ? expense += data.amount : expense;
-            savings = data.type === 'savings' ? savings += data.amount : savings
+            const income = total_income(data);
+            const expense = total_expense(data);
+            const savings = total_savings(data);
 
             document.getElementById('totalIncome').innerText = income;
             document.getElementById('totalExpense').innerText = expense;
@@ -341,25 +336,21 @@
         }
 
         function total_income(data) {
-            sumIncome = data.reduce((sum, record) => {
-                return record.type === 'income' ? sum += Number.record.amount : sum;
+            return data.reduce((sum, record) => {
+                return record.type === 'income' ? sum += record.amount : sum;
             }, 0);
-            console.log(sumIncome);
-            return sumIncome;
         }
 
         function total_expense(data) {
-            sumExpenses = data.reduce((sum, record) => {
-                return record.type === 'expense' ? sum += Number.record.amount : sum;
+            return data.reduce((sum, record) => {
+                return record.type === 'expense' ? sum += record.amount : sum;
             }, 0);
-            return sumExpenses;
         }
 
         function total_savings(data) {
-            sumSavings = data.reduce((sum, record) => {
-                return record.category === 'savings' ? sum += Number.record.amount : sum;
+            return data.reduce((sum, record) => {
+                return record.category === 'savings' ? sum += record.amount : sum;
             }, 0);
-            return sumSavings;
         }
 
         function toggleform() {
@@ -386,11 +377,15 @@
 
         function deleteRow(data) {
             this.closest('tr').remove(); // remove the row
-            updateTable();
-            updateTotals();
+            updateTotals(data);
         };
 
         fetchRecords();
+        sortDate.addEventListener('click', sortByDate);
+        groupExpense.addEventListener('click', groupExpensesByCategory);
+        document.getElementById('add-record').addEventListener('click', toggleform);
+        console.log(data);
+
 
         document.getElementById('add-new-form').addEventListener('submit', function (e) {
             e.preventDefault();

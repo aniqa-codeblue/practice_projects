@@ -63,6 +63,31 @@
             margin-right: 6px;
             margin-bottom: 5px;
         }
+
+        input:invalid,
+        select:invalid {
+            border: 2px solid rgb(233, 228, 228);
+        }
+
+        .error-message {
+            color: rgb(65, 60, 60);
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        .date-input,
+        .type-input,
+        .cat-input,
+        .desc-input,
+        .amount-input,
+        .addbtn,
+        form {
+            display: flex;
+            flex-direction: row;
+            margin: 5px;
+            padding: 10px;
+            gap: 0.5rem;
+        }
     </style>
 </head>
 
@@ -82,17 +107,41 @@
     </div>
 
     <div class="add-new-records" id="add-new-records" style="display: none; margin-top: 10px;">
-        <form class="add-new-form" id="add-new-form">
-            <input type="date" name="date" />
-            <select name="type" required>
-                <option value="expense">Expense</option>
-                <option value="income">Income</option>
-            </select>
-            <input type="text" name="category" placeholder="Enter Category" />
-            <input type="text" name="description" placeholder="Enter Description" />
-            <input type="number" name="amount" placeholder="Enter Amount" />
-            <button type="submit">Add Record</button>
-        </form>
+        <div class="change-form-display">
+            <form class="add-new-form" id="add-new-form" novalidate>
+                <div>
+                    <input class="date-input" type="date" name="date" required />
+                    <div class="error-message" id="date-error"></div>
+                </div>
+
+                <div>
+                    <select class="type-input" name="type" required>
+                        <option value="">Select Type</option>
+                        <option value="expense">Expense</option>
+                        <option value="income">Income</option>
+                    </select>
+                    <div class="error-message" id="type-error"></div>
+                </div>
+
+                <div>
+                    <input class="cat-input" type="text" name="category" placeholder="Enter Category" required />
+                    <div class="error-message" id="category-error"></div>
+                </div>
+
+                <div>
+                    <input class="desc-input" type="text" name="description" placeholder="Enter Description" required />
+                    <div class="error-message" id="description-error"></div>
+                </div>
+
+                <div>
+                    <input class="amount-input" type="number" name="amount" placeholder="Enter Amount" required
+                        min="0.01" step="any" />
+                    <div class="error-message" id="amount-error"></div>
+                </div>
+
+                <button class="addbtn" type="submit">Add Record</button>
+            </form>
+        </div>
     </div>
 
     <table>
@@ -221,6 +270,7 @@
             });
             updateTable();
             updateTotals();
+            console.log(data);
         }
 
 
@@ -251,7 +301,7 @@
             });
         }
 
-        function updateTotals() {
+        function updateTotals(data) {
             const income = total_income(data);
             const expense = total_expense(data);
             const savings = total_savings(data);
@@ -283,7 +333,7 @@
 
         function sortByDate() {
             data.sort((a, b) => new Date(a.date) - new Date(b.date));
-            updateTable();
+            updateTable(data);
         }
 
         function groupExpensesByCategory() {
@@ -294,13 +344,41 @@
         document.getElementById('add-new-form').addEventListener('submit', function (e) {
             e.preventDefault();
             const formData = new FormData(this);
+
+            const id = Date.now();
+            const date = formData.get('date');
+            const type = formData.get('type');
+            const category = formData.get('category').trim();
+            const description = formData.get('description').trim();
+            const amount = parseFloat(formData.get('amount'));
+
+            if (date === null) {
+                alert('Please enter a date');
+                return;
+            }
+
+            if (!type) {
+                alert('Please enter a type for record');
+                return;
+            }
+
+            if (!category && !description) {
+                alert('Please enter a category and its description');
+                return;
+            }
+
+            if (isNaN(amount) || amount <= 0) {
+                alert('Please enter an amount');
+                return;
+            }
+
             const newRecord = {
                 id: Date.now(),
-                date: formData.get('date'),
-                type: formData.get('type'),
-                category: formData.get('category'),
-                description: formData.get('description'),
-                amount: parseFloat(formData.get('amount'))
+                date,
+                type,
+                category,
+                description,
+                amount
             };
             data.push(newRecord);
             updateTable();
