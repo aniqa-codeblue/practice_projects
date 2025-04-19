@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Personal Finance Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0 0 0;
+        }
+
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f0f0f0;
+        }
+
+        .income {
+            color: green;
+        }
+
+        .expense {
+            color: red;
+        }
+
+        .summary {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .buttons {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-end;
+        }
+
+        .income,
+        .expense,
+        .total-savings {
+            margin: 5px;
+            padding: 5px;
+        }
+
+        .sort,
+        .group,
+        .add-record {
+            padding: 5px;
+            margin-right: 6px;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Personal Finance Tracker</h1>
+
+    <div class="summary">
+        <p class="income">Total Income: <span id="total-income"></span><br /></p>
+        <p class="expense">Total Expenses: <span id="total-expense"></span><br /></p>
+        <p class="total-savings">Savings: <span id="total-savings"></span></p>
+    </div>
+
+    <div class="buttons">
+        <button class="add-record" id="add-record">Add Record</button>
+        <button class="sort" id="sortid">Sort By Date</button>
+        <button class="group" id="groupid">Group By Types</button>
+    </div>
+
+    <div class="add-new-records" id="add-new-records" style="display: none; margin-top: 10px;">
+        <form class="add-new-form" id="add-new-form">
+            <input type="date" name="date" />
+            <select name="type" required>
+                <option value="expense">Expense</option>
+                <option value="income">Income</option>
+            </select>
+            <input type="text" name="category" placeholder="Enter Category" />
+            <input type="text" name="description" placeholder="Enter Description" />
+            <input type="number" name="amount" placeholder="Enter Amount" />
+            <button type="submit">Add Record</button>
+        </form>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Category</th>
+                <th>Description</th>
+                <th>Amount</th>
+                <th>Delete</th>
+            </tr>
+        </thead>
+        <tbody id="all-rows">
+
+        </tbody>
+    </table>
+
+
+    <script>
+        const main = document.getElementById('all-rows');
+        const sortDate = document.getElementById('sortid');
+        const groupExpense = document.getElementById('groupid');
+        let sumExpenses, sumSavings, sumIncome;
+
+        const group_expense = { expense: true };
+        const group_income = { expense: false };
+
+        let data = [];
+        async function fetchRecords() {
+
+            data = [
+                {
+                    id: 1,
+                    type: 'income',
+                    amount: 3000,
+                    category: 'salary',
+                    date: '2025-04-01',
+                    description: 'Monthly salary'
+                },
+                {
+                    id: 2,
+                    type: 'expense',
+                    amount: 200,
+                    category: 'groceries',
+                    date: '2025-04-02',
+                    description: 'Supermarket shopping'
+                },
+                {
+                    id: 3,
+                    type: 'expense',
+                    amount: 800,
+                    category: 'rent',
+                    date: '2025-04-01',
+                    description: 'April rent'
+                },
+                {
+                    id: 4,
+                    type: 'expense',
+                    amount: 100,
+                    category: 'entertainment',
+                    date: '2025-04-05',
+                    description: 'Movie night'
+                },
+                {
+                    id: 5,
+                    type: 'income',
+                    amount: 500,
+                    category: 'freelance',
+                    date: '2025-04-03',
+                    description: 'Side project'
+                },
+                {
+                    id: 6,
+                    type: "income",
+                    amount: 400,
+                    category: "savings",
+                    date: "2025-04-06",
+                    description: "Monthly savings transfer"
+                },
+                {
+                    id: 7,
+                    type: "income",
+                    amount: 250,
+                    category: "savings",
+                    date: "2025-04-08",
+                    description: "Emergency fund contribution"
+                },
+                {
+                    id: 8,
+                    type: "income",
+                    amount: 150,
+                    category: "savings",
+                    date: "2025-04-10",
+                    description: "Spare change deposit"
+                }
+            ];
+            // fetch('./transaction_records.json')
+            //     .then(response => {
+            //         if (!response.ok) {
+            //             throw new Error(`Http Error: Status- ${response.status}`);
+            //         }
+            //         return response.json();
+            //     })
+            //     .then(json => {
+            //         console.log(json);
+            //         data = json;
+            //         if (!data || data.length === 0) {
+            //             throw new Error('No record of transaction!');
+            //         }
+
+            data.forEach(record => {
+                try {
+                    const record_row = document.createElement('tr');
+                    record_row.classList.add('record-item');
+
+                    record_row.innerHTML = `
+                            <tr>
+                                <td>${record.date}</td>
+                                <td class="${record.type}">${record.type}</td>
+                                <td>${record.category}</td>
+                                <td>${record.description}</td>
+                                <td>${record.amount}</td>
+                                <td><button class="delete-row" style="padding: 5px; border-radius:15px; background-color: black; color: white;">Delete</button></td>
+                            </tr>`;
+                    main.appendChild(record_row);
+                    const income = total_income(data);
+                    document.getElementById('total-income').innerHTML = income;
+                    const tot_expense = total_expense(data);
+                    document.getElementById('total-expense').innerHTML = tot_expense;
+                    const tot_saving = total_savings(data);
+                    document.getElementById('total-savings').innerHTML = tot_saving;
+                    document.querySelectorAll('.delete-row').forEach(btn => {
+                        btn.addEventListener('click', deleteRow)
+                    });
+                } catch {
+                    console.error('Error creating product card:', error, record);
+                }
+            });
+            // });
+            //         // .catch (error => console.error('Failed to fetch json data:', error));
+        }
+
+        function updateTable(record = data) {
+            main.innerHTML = '';
+            data.forEach(record => {
+                try {
+                    const record_row = document.createElement('tr');
+                    record_row.classList.add('record-item');
+
+                    record_row.innerHTML = `
+                            <tr>
+                                <td>${record.date}</td>
+                                <td class="${record.type}">${record.type}</td>
+                                <td>${record.category}</td>
+                                <td>${record.description}</td>
+                                <td>${record.amount}</td>
+                                <td><button class="delete-row" style="padding: 5px; border-radius:15px; background-color: black; color: white;">Delete</button></td>
+                            </tr>`;
+                    main.appendChild(record_row);
+                } catch {
+                    console.error('Error creating product card:', error, record);
+                }
+            });
+        }
+        //Sort Transactions by Date
+        function sortByDate() {
+            data = data.sort((a, b) => new Date(a.date) - new Date(b.date));
+            console.log(data.map(d => d.date));
+            updateTable();
+        }
+        //Group Expenses by Category
+        function groupExpensesByCategory() {
+            const g_expense = {};
+            const g_income = {};
+
+            data.forEach(record => {
+                if (record.type === 'expense') {
+                    if (!g_expense[record.category]) {
+                        g_expense[record.category] = [];
+                    }
+                    g_expense[record.category].push(record);
+                } else {
+                    if (!g_income[record.category]) {
+                        g_income[record.category] = [];
+                    }
+                    g_income[record.category].push(record);
+                }
+            });
+
+            console.log("Grouped Expenses:", g_expense);
+            console.log("Grouped Income:", g_income);
+
+            // Optional: flatten expense list
+            const groupedList = Object.entries(g_expense).flatMap(([category, records]) => records);
+            const incomeList = Object.entries(g_income).flatMap(([category, records]) => records);
+
+            combined = [...groupedList, ...incomeList];
+            updateTable(combined); // Only showing expenses for now
+        }
+
+        // function deleteRow(record) {
+        //     deletebtn.addEventListener('click', () => {
+        //         console.log(record);
+        //         record.remove();
+        //     });
+        // }
+
+        // function deleteRow(record) {
+        //     var i = record.parentNode.parentNode.rowIndex;
+        //     document.getElementById("add-new-form").deleteRow(i);
+        // }
+
+        function updateTotals(data) {
+            let income = total_income(data);
+            let expense = total_expense(data);
+            let savings = total_savings(data);
+
+            income = data.type === 'income' ? income += data.amount : income;
+            expense = data.type === 'expense' ? expense += data.amount : expense;
+            savings = data.type === 'savings' ? savings += data.amount : savings
+
+            document.getElementById('totalIncome').innerText = income;
+            document.getElementById('totalExpense').innerText = expense;
+            document.getElementById('totalSavings').innerText = savings;
+        }
+
+        function updateTableWithData(tableData) {
+            const main = document.getElementById('all-rows');
+            main.innerHTML = '';
+
+            tableData.forEach(record => {
+                const recordRow = document.createElement('tr');
+                recordRow.innerHTML = `
+                <tr>
+                    <td>${record.date}</td>
+                    <td class="${record.type === 'income' ? 'income' : 'expense'}">${record.type}</td>
+                    <td>${record.category}</td>
+                    <td>${record.description}</td>
+                    <td>${record.amount}</td>
+                    <td><button class="delete-row" style="padding: 5px; border-radius:15px; background-color: black; color: white;">Delete</button></td>
+                </tr>
+        `;
+                main.appendChild(recordRow);
+            });
+        }
+
+        function total_income(data) {
+            sumIncome = data.reduce((sum, record) => {
+                return record.type === 'income' ? sum += Number.record.amount : sum;
+            }, 0);
+            console.log(sumIncome);
+            return sumIncome;
+        }
+
+        function total_expense(data) {
+            sumExpenses = data.reduce((sum, record) => {
+                return record.type === 'expense' ? sum += Number.record.amount : sum;
+            }, 0);
+            return sumExpenses;
+        }
+
+        function total_savings(data) {
+            sumSavings = data.reduce((sum, record) => {
+                return record.category === 'savings' ? sum += Number.record.amount : sum;
+            }, 0);
+            return sumSavings;
+        }
+
+        function toggleform() {
+            const recordForm = document.getElementById('add-new-records');
+            recordForm.style.display = recordForm.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function appendRowToTable(record) {
+            const record_row = document.createElement('tr');
+            record_row.classList.add('record-item');
+
+            record_row.innerHTML = `
+            <tr>
+                <td>${record.date}</td>
+                <td class="${record.type}">${record.type}</td>
+                <td>${record.category}</td>
+                <td>${record.description}</td>
+                <td>${record.amount}</td>
+                <td><button class="delete-row" style="padding: 5px; border-radius:15px; background-color: black; color: white;">Delete</button></td>
+            </tr>`;
+            main.appendChild(record_row);
+            updateTotals(record);
+        }
+
+        function deleteRow(data) {
+            this.closest('tr').remove(); // remove the row
+            updateTable();
+            updateTotals();
+        };
+
+        fetchRecords();
+
+        document.getElementById('add-new-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const newRecord = {
+                date: formData.get('date'),
+                type: formData.get('type'),
+                category: formData.get('category'),
+                description: formData.get('description'),
+                amount: formData.get('amount')
+            };
+            appendRowToTable(newRecord);
+            this.reset();
+        });
+    </script>
+</body>
+
+</html>
